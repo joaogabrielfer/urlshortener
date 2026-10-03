@@ -162,6 +162,15 @@ fn handle_request(
         }
       }
     }
+    Ok(req) if req.method == http.Delete -> {
+      let key =
+        req.path |> string.to_graphemes() |> list.drop(1) |> string.join("")
+
+        actor.send(app.store, Delete(key))
+
+        response.new(204)
+        |> response.set_body(ewe.Text("deleted"))
+      }
     _ -> {
       response.new(400)
       |> response.set_body(error_response("bad request"))
