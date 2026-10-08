@@ -16,7 +16,7 @@ import gleam/result
 import gleam/string
 import logging
 
-const server_url = "localhost"
+const server_url = "localhost:8080"
 
 type StoreMessage {
   Insert(String, Subject(Option(String)))
@@ -95,6 +95,20 @@ fn handle_request(
   app: App,
 ) -> response.Response(ewe.Body) {
   case ewe.read_body(request, 1024) {
+    Ok(req) if req.method == http.Get && req.path == "/" -> {
+      case ewe.file(request.body, "../frontend/index.html", offset: option.None, limit: option.None) {
+        Ok(file_body) -> {
+          response.new(200)
+          |> response.set_header("content-type", "text/html; charset=utf-8")
+          |> response.set_body(file_body)
+        }
+        Error(_) -> {
+          response.new(404)
+          |> response.set_header("content-type", "text/plain")
+          |> response.set_body(ewe.Text("Not Found"))
+        }
+      }
+    }
     Ok(req) if req.method == http.Post -> {
       let url_decoder = {
         use url <- decode.field("url", decode.string)
@@ -150,9 +164,9 @@ fn handle_request(
 
       case entry {
         option.Some(s) -> {
-          response.new(200)
-          |> response.set_header("content-type", "text/plain; charset=utf-8")
-          |> response.set_body(ewe.Text(json.object([#("location", json.string(s))]) |> json.to_string()))
+          response.new(302)
+          |> response.set_header("location", s)
+          |> response.set_body(ewe.Empty)
         }
 
         option.None -> {

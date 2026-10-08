@@ -2,7 +2,6 @@ set shell := ["bash", "-cu"]
 
 backend := "backend"
 frontend := "frontend"
-output := "public/main.js"
 
 default:
     @just --list
@@ -11,7 +10,7 @@ backend:
     cd {{backend}} && gleam run
 
 frontend:
-    cd {{frontend}} && elm make src/Main.elm --output={{output}}
+    cd {{frontend}} && elm make src/Main.elm
 
 backend-dev:
     cd backend && watchexec \
@@ -21,7 +20,10 @@ backend-dev:
         -- gleam run
 
 frontend-dev:
-    cd frontend && npx elm-live src/Main.elm
+    cd frontend && watchexec \
+        --watch src \
+        --exts elm \
+        -- elm make src/Main.elm
 
 dev:
     #!/usr/bin/env bash
